@@ -3,9 +3,9 @@ package fileutil
 import (
 	"ebook-metadata-extractor/config"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,12 +25,13 @@ func ReadTitles(cfg config.Config) []string {
 	return titles
 }
 
-func HandleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg config.Config) error {
+func HandleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg config.Config) (string, error) {
 	targetFile := filepath.Join(cfg.TargetDir, title+cfg.TargetFileExtension)
+	jsonResponse := ""
 
 	file, err := os.OpenFile(targetFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("error opening file: %v", err)
+		log.Fatalf("error opening file: %v", err)
 	}
 	defer file.Close()
 
@@ -39,18 +40,24 @@ func HandleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg
 		if errors.Is(err, io.EOF) {
 			break
 		}
-
 		if err != nil {
-			return fmt.Errorf("stream error: %v", err)
+			log.Fatalf("stream error: %v", err)
 		}
 
-		_, writeErr := file.WriteString(response.Choices[0].Delta.Content)
-		if writeErr != nil {
-			return fmt.Errorf("error writing to file: %v", writeErr)
+		jsonPart := response.Choices[0].Delta.Content
+
+		jsonResponse += jsonPart
+		if cfg.PeristMetadata {
+			_, err = file.WriteString(jsonPart)
+			if err != nil {
+				log.Fatalf("error writing to file: %v", err)
+			}
 		}
 	}
 
-	return nil
+	log.Printf("JSON response: %v\n", jsonResponse)
+
+	return jsonResponse, nil
 }
 
 func getSourceFiles(cfg config.Config) []string {
@@ -71,7 +78,7 @@ func getSourceFiles(cfg config.Config) []string {
 func readAllFileNamesIn(dir string) []string {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		fmt.Printf("error reading directory: %v\n", err)
+		log.Printf("error reading directory: %v\n", err)
 		return nil
 	}
 	return removeFileExtensions(files)

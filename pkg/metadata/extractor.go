@@ -4,33 +4,33 @@ import (
 	"context"
 	"ebook-metadata-extractor/config"
 	"ebook-metadata-extractor/pkg/fileutil"
-	"fmt"
+	"log"
 	"os"
 	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
 )
 
-func ExtractMetaData(title string, cfg config.Config) {
-	fmt.Printf("Processing: %v\n", title)
+func ExtractMetaData(title string, cfg config.Config) (string, error) {
+	log.Printf("Processing: %v\n", title)
 
 	prompt := preparePrompt(cfg.PromptFile, title)
 	req := configureChatCompletionRequest(prompt, cfg)
 
 	stream := generateChatCompletion(req, cfg)
-	fileutil.HandleStreamResponse(stream, title, cfg)
+	return fileutil.HandleStreamResponse(stream, title, cfg)
 }
 
 func preparePrompt(filePath, title string) string {
 	prompt, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading prompt file: %v\n", err)
+		log.Printf("error reading prompt file: %v\n", err)
 	}
 
 	promptString := strings.Replace(string(prompt), "{title}", title, -1)
 
 	if err != nil {
-		fmt.Printf("error evaluating prompt template: %v\n", err)
+		log.Printf("error evaluating prompt template: %v\n", err)
 	}
 	return promptString
 }
@@ -40,7 +40,7 @@ func generateChatCompletion(req *openai.ChatCompletionRequest, cfg config.Config
 
 	stream, err := client.CreateChatCompletionStream(context.Background(), *req)
 	if err != nil {
-		fmt.Printf("chat completion stream error: %v", err)
+		log.Printf("chat completion stream error: %v", err)
 	}
 
 	return stream
