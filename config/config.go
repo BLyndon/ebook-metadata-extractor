@@ -11,6 +11,8 @@ type Config struct {
 	TargetFileExtension string
 	SourceDir           string
 	TargetDir           string
+	PeristMetadata      bool
+	Port                int
 }
 
 func LoadConfig() Config {
@@ -21,5 +23,7 @@ func LoadConfig() Config {
 		TargetFileExtension: ".json",
 		SourceDir:           "./data/sourceDir",
 		TargetDir:           "./data/targetDir",
+		PeristMetadata:      true,
+		Port:                8080,
 	}
 }
