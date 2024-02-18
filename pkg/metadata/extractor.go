@@ -3,7 +3,8 @@ package metadata
 import (
 	"context"
 	"ebook-metadata-extractor/config"
-	"ebook-metadata-extractor/pkg/fileutil"
+	"errors"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -18,7 +19,11 @@ func ExtractMetaData(title string, cfg config.Config) (string, error) {
 	req := configureChatCompletionRequest(prompt, cfg)
 
 	stream := generateChatCompletion(req, cfg)
-	return fileutil.HandleStreamResponse(stream, title, cfg)
+	metadataString, err := HandleStreamResponse(stream, title, cfg)
+	if err != nil {
+		return "", err
+	}
+	return metadataString, nil
 }
 
 func preparePrompt(filePath, title string) string {
@@ -58,4 +63,22 @@ func configureChatCompletionRequest(prompt string, cfg config.Config) *openai.Ch
 		},
 		Stream: true,
 	}
+}
+
+func HandleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg config.Config) (string, error) {
+	jsonResponse := ""
+	for {
+		response, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("stream error: %v", err)
+		}
+
+		jsonPart := response.Choices[0].Delta.Content
+
+		jsonResponse += jsonPart
+	}
+	return jsonResponse, nil
 }

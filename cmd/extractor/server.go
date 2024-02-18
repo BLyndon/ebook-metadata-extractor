@@ -2,6 +2,7 @@ package main
 
 import (
 	"ebook-metadata-extractor/config"
+	"ebook-metadata-extractor/pkg/fileutil"
 	"ebook-metadata-extractor/pkg/metadata"
 	"fmt"
 	"net/http"
@@ -16,12 +17,20 @@ func ExtractMetaDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse, err := metadata.ExtractMetaData(title, cfg)
+	metadataString, err := metadata.ExtractMetaData(title, cfg)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error extracting metadata: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	if cfg.PeristMetadata {
+		err := fileutil.WriteToFile(metadataString, title, cfg)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error persisting metadata: %v", err), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(jsonResponse))
+	w.Write([]byte(metadataString))
 }
