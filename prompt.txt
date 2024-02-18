@@ -1,0 +1,12 @@
+I need assistance in extracting metadata for a specific book title. The title in question is "{title}". Based on this title, could you provide the metadata in a structured JSON format? The required fields and format are as follows:
+
+{
+  "Title": "The actual title of the book",
+  "Authors": ["List of authors, each as a separate item in the array"],
+  "Publisher": "Name of the publishing company",
+  "PublicationYear": "Year the book was published",
+  "Genre": ["Primary genre of the book", "Secondary genre (if any)"],
+  "Language": "Language the book is written in"
+}
+
+Please ensure the information is accurate and neatly organized within the JSON structure provided.
