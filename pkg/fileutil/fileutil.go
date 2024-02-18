@@ -2,14 +2,16 @@ package fileutil
 
 import (
 	"ebook-metadata-extractor/config"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 func WriteToFile(metadataString string, title string, cfg config.Config) error {
-	filePath := cfg.TargetDir + "/" + title + cfg.TargetFileExtension
+	filePath := filepath.Join(cfg.TargetDir, title+cfg.TargetFileExtension)
 	file, err := os.Create(filePath)
 	if err != nil {
 		log.Printf("error creating file: %v\n", err)
@@ -27,7 +29,7 @@ func WriteToFile(metadataString string, title string, cfg config.Config) error {
 	return nil
 }
 
-func ReadTitles(cfg config.Config) []string {
+func GetSourceTargetTitleDelta(cfg config.Config) []string {
 	sourceFiles := getSourceFiles(cfg)
 
 	var titles []string
@@ -37,6 +39,16 @@ func ReadTitles(cfg config.Config) []string {
 		}
 	}
 	return titles
+}
+
+func ReadMetadataIfExists(title string, cfg config.Config) (string, error) {
+	fileName := filepath.Join(cfg.TargetDir, title+cfg.TargetFileExtension)
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("Metadata found for title: %v\n", title)
+	return string(content), nil
 }
 
 func getSourceFiles(cfg config.Config) []string {
@@ -64,7 +76,7 @@ func readAllFileNamesIn(dir string) []string {
 }
 
 func removeFileExtensions(files []fs.DirEntry) []string {
-	var filesWithoutExtensions []string
+	filesWithoutExtensions := make([]string, 0)
 	for _, file := range files {
 		if file.Name() != ".DS_Store" {
 			baseFileName := getBaseFileName(file.Name())
