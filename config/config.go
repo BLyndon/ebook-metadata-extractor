@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -13,6 +15,7 @@ type Config struct {
 	TargetDir           string
 	PeristMetadata      bool
 	Port                int
+	OpenApiKey          string
 }
 
 func LoadConfig() Config {
@@ -25,5 +28,6 @@ func LoadConfig() Config {
 		TargetDir:           "./data/targetDir",
 		PeristMetadata:      true,
 		Port:                8080,
+		OpenApiKey:          os.Getenv("OPENAI_API_KEY"),
 	}
 }

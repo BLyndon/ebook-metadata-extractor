@@ -41,7 +41,7 @@ func preparePrompt(filePath, title string) string {
 }
 
 func generateChatCompletion(req *openai.ChatCompletionRequest, cfg config.Config) *openai.ChatCompletionStream {
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	client := openai.NewClient(cfg.OpenApiKey)
 
 	stream, err := client.CreateChatCompletionStream(context.Background(), *req)
 	if err != nil {
