@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -25,7 +26,7 @@ func ReadTitles(cfg config.Config) []string {
 }
 
 func HandleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg config.Config) error {
-	targetFile := cfg.TargetDir + title + cfg.JsonExtension
+	targetFile := filepath.Join(cfg.TargetDir, title+cfg.TargetFileExtension)
 
 	file, err := os.OpenFile(targetFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
