@@ -16,10 +16,12 @@ func ExtractMetaDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := metadata.ExtractMetaData(title, cfg)
+	jsonResponse, err := metadata.ExtractMetaData(title, cfg)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error extracting metadata: %v", err), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprint(w, result)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(jsonResponse))
 }
