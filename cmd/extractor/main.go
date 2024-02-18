@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"ebook-metadata-extractor/config"
+	"ebook-metadata-extractor/pkg/fileutil"
 	"errors"
 	"fmt"
 	"io"
@@ -15,30 +16,15 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 
-	titles := readTitles(cfg)
+	titles := fileutil.ReadTitles(cfg)
 
 	for _, title := range titles {
+		fmt.Printf("Processing: %v\n", title)
 		err := extractMetaData(title, cfg)
 		if err != nil {
 			fmt.Printf("Error extracting metadata: %v\n", err)
 		}
 	}
-}
-
-func readTitles(cfg config.Config) []string {
-	files, err := os.ReadDir(cfg.SourceDir)
-	if err != nil {
-		fmt.Printf("Error reading directory: %v\n", err)
-		return nil
-	}
-
-	var titles []string
-	for _, file := range files {
-		if file.Name() != ".DS_Store" {
-			titles = append(titles, file.Name())
-		}
-	}
-	return titles
 }
 
 func extractMetaData(title string, cfg config.Config) error {
@@ -47,8 +33,6 @@ func extractMetaData(title string, cfg config.Config) error {
 		fmt.Printf("Error preparing prompt: %v\n", err)
 		return nil
 	}
-
-	fmt.Printf("Prompt: %v\n", prompt)
 
 	client := getClient()
 	ctx := context.Background()
@@ -107,7 +91,6 @@ func handleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg
 	for {
 		response, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
-			fmt.Println("Extraction finished")
 			break
 		}
 
