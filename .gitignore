@@ -18,8 +18,8 @@
 .idea/
 
 # Ignore the sourceDir and targetDir directories
-sourceDir/
-targetDir/
+data/sourceDir/
+data/targetDir/
 
 # Mac generated files
 .DS_Store
