@@ -17,10 +17,13 @@ func ExtractMetaDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadataString, err := metadata.ExtractMetaData(title, cfg)
+	metadataString, err := fileutil.ReadMetadataIfExists(title, cfg)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error extracting metadata: %v", err), http.StatusInternalServerError)
-		return
+		metadataString, err = metadata.ExtractMetaData(title, cfg)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error retrieving metadata: %v", err), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	if cfg.PeristMetadata {
