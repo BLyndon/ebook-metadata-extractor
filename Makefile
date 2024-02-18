@@ -12,6 +12,11 @@ build:
 run: build
 	@$(BINARY_NAME)
 
+stop:
+	@pkill -f $(BINARY_NAME) || echo "Process not found."
+
+reload: stop run
+
 docker-build:
 	@docker build -t $(DOCKER_IMAGE_NAME) .
 
