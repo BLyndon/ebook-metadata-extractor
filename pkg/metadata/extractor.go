@@ -13,7 +13,7 @@ import (
 )
 
 func ExtractMetaData(title string, cfg config.Config) (string, error) {
-	log.Printf("Processing: %v\n", title)
+	log.Printf("Calling OpenAI API for title: %v\n", title)
 
 	prompt := preparePrompt(cfg.PromptFile, title)
 	req := configureChatCompletionRequest(prompt, cfg)
