@@ -15,15 +15,10 @@ func ExtractMetaData(title string, cfg config.Config) {
 	fmt.Printf("Processing: %v\n", title)
 
 	prompt := preparePrompt(cfg.PromptFile, title)
+	req := configureChatCompletionRequest(prompt, cfg)
 
-	client := getClient()
-	ctx := context.Background()
-
-	generateChatCompletion(ctx, client, title, prompt, cfg)
-}
-
-func getClient() *openai.Client {
-	return openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	stream := generateChatCompletion(req, cfg)
+	fileutil.HandleStreamResponse(stream, title, cfg)
 }
 
 func preparePrompt(filePath, title string) string {
@@ -40,16 +35,15 @@ func preparePrompt(filePath, title string) string {
 	return promptString
 }
 
-func generateChatCompletion(ctx context.Context, client *openai.Client, title string, prompt string, cfg config.Config) error {
-	req := configureChatCompletionRequest(prompt, cfg)
+func generateChatCompletion(req *openai.ChatCompletionRequest, cfg config.Config) *openai.ChatCompletionStream {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
-	stream, err := client.CreateChatCompletionStream(ctx, *req)
+	stream, err := client.CreateChatCompletionStream(context.Background(), *req)
 	if err != nil {
-		return fmt.Errorf("chat completion stream error: %v", err)
+		fmt.Printf("chat completion stream error: %v", err)
 	}
-	defer stream.Close()
 
-	return fileutil.HandleStreamResponse(stream, title, cfg)
+	return stream
 }
 
 func configureChatCompletionRequest(prompt string, cfg config.Config) *openai.ChatCompletionRequest {
