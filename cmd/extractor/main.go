@@ -2,16 +2,16 @@ package main
 
 import (
 	"ebook-metadata-extractor/config"
-	"ebook-metadata-extractor/pkg/fileutil"
-	"ebook-metadata-extractor/pkg/metadata"
+	"log"
+	"net/http"
+	"strconv"
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	http.HandleFunc("/metadata/extract", ExtractMetaDataHandler)
 
-	titles := fileutil.ReadTitles(cfg)
+	port := config.LoadConfig().Port
 
-	for _, title := range titles {
-		metadata.ExtractMetaData(title, cfg)
-	}
+	log.Println("Starting server on :" + strconv.Itoa(port))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), nil))
 }
