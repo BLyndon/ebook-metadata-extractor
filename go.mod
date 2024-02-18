@@ -1,4 +1,4 @@
-module ebook-renamer
+module ebook-metadata-extractor
 
 go 1.22.0
 
