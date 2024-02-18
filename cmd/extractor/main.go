@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"ebook-metadata-extractor/config"
 	"errors"
 	"fmt"
 	"io"
@@ -11,28 +12,21 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-const (
-	OpenAIModel   = openai.GPT3Dot5Turbo
-	MaxTokenCount = 1000
-	PromptFile    = "./prompt.txt"
-	JsonExtension = ".json"
-	SourceDir     = "./sourceDir"
-	TargetDir     = "./targetDir/"
-)
-
 func main() {
-	titles := getTitles()
+	cfg := config.LoadConfig()
+
+	titles := readTitles(cfg)
 
 	for _, title := range titles {
-		err := extractMetaData(title)
+		err := extractMetaData(title, cfg)
 		if err != nil {
 			fmt.Printf("Error extracting metadata: %v\n", err)
 		}
 	}
 }
 
-func getTitles() []string {
-	files, err := os.ReadDir(SourceDir)
+func readTitles(cfg config.Config) []string {
+	files, err := os.ReadDir(cfg.SourceDir)
 	if err != nil {
 		fmt.Printf("Error reading directory: %v\n", err)
 		return nil
@@ -47,8 +41,8 @@ func getTitles() []string {
 	return titles
 }
 
-func extractMetaData(title string) error {
-	prompt, err := preparePrompt(PromptFile, title)
+func extractMetaData(title string, cfg config.Config) error {
+	prompt, err := preparePrompt(cfg.PromptFile, title)
 	if err != nil {
 		fmt.Printf("Error preparing prompt: %v\n", err)
 		return nil
@@ -59,7 +53,7 @@ func extractMetaData(title string) error {
 	client := getClient()
 	ctx := context.Background()
 
-	err = generateChatCompletion(ctx, client, title, prompt)
+	err = generateChatCompletion(ctx, client, title, prompt, cfg)
 	if err != nil {
 		fmt.Printf("Error in chat completion: %v\n", err)
 	}
@@ -79,10 +73,10 @@ func preparePrompt(filePath, title string) (string, error) {
 	return promptString, nil
 }
 
-func generateChatCompletion(ctx context.Context, client *openai.Client, title string, prompt string) error {
+func generateChatCompletion(ctx context.Context, client *openai.Client, title string, prompt string, cfg config.Config) error {
 	req := openai.ChatCompletionRequest{
-		Model:     OpenAIModel,
-		MaxTokens: MaxTokenCount,
+		Model:     cfg.OpenAIModel,
+		MaxTokens: cfg.MaxTokenCount,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
@@ -98,11 +92,11 @@ func generateChatCompletion(ctx context.Context, client *openai.Client, title st
 	}
 	defer stream.Close()
 
-	return handleStreamResponse(stream, title)
+	return handleStreamResponse(stream, title, cfg)
 }
 
-func handleStreamResponse(stream *openai.ChatCompletionStream, title string) error {
-	targetFile := TargetDir + title + JsonExtension
+func handleStreamResponse(stream *openai.ChatCompletionStream, title string, cfg config.Config) error {
+	targetFile := cfg.TargetDir + title + cfg.JsonExtension
 
 	file, err := os.OpenFile(targetFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
