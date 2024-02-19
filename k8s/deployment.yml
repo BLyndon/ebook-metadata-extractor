@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: extractor-deployment
+spec:
+    replicas: 2
+    selector:
+        matchLabels:
+            app: extractor
+    template:
+        metadata:
+            labels:
+                app: extractor
+        spec:
+            containers:
+                - name: extractor
+                  image: blyndon/extractor:latest
+                  ports:
+                      - containerPort: 8080
