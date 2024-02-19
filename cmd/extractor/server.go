@@ -5,7 +5,9 @@ import (
 	"ebook-metadata-extractor/pkg/fileutil"
 	"ebook-metadata-extractor/pkg/metadata"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 func ExtractMetaDataHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,14 +28,23 @@ func ExtractMetaDataHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if cfg.PeristMetadata {
+	if metadataString == "" {
+		http.Error(w, "Metadata not found", http.StatusNotFound)
+		return
+	}
+
+	if cfg.PersistMetadata {
 		err := fileutil.WriteToFile(metadataString, title, cfg)
 		if err != nil {
+			log.Printf("Error persisting metadata: %v", err) // Log server-side error
 			http.Error(w, fmt.Sprintf("Error persisting metadata: %v", err), http.StatusInternalServerError)
 			return
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(metadataString))
+	metadataBytes := []byte(metadataString)
+	w.Header().Set("Content-Length", strconv.Itoa(len(metadataBytes)))
+	w.WriteHeader(http.StatusOK)
+	w.Write(metadataBytes)
 }
