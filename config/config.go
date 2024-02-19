@@ -13,7 +13,7 @@ type Config struct {
 	TargetFileExtension string
 	SourceDir           string
 	TargetDir           string
-	PeristMetadata      bool
+	PersistMetadata     bool
 	Port                int
 	OpenApiKey          string
 }
@@ -26,7 +26,7 @@ func LoadConfig() Config {
 		TargetFileExtension: ".json",
 		SourceDir:           "./data/sourceDir",
 		TargetDir:           "./data/targetDir",
-		PeristMetadata:      true,
+		PersistMetadata:     true,
 		Port:                8080,
 		OpenApiKey:          os.Getenv("OPENAI_API_KEY"),
 	}
